@@ -1,0 +1,14 @@
+{
+    "name": "my-services",
+    "main": "./superb.mjs",
+    "exports": {
+        
+        "node":{
+            "import": "./super.mjs",
+            "require": "./hello.js"      
+        },
+        "default": "./hello.js"
+        
+        
+    }
+}

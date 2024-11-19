@@ -14,6 +14,8 @@
   "license": "ISC",
   "description": "A Real Estate Project",
   "dependencies": {
+    "axios": "^1.7.7",
+    "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "css-loader": "^7.1.2",
     "dotenv": "^16.4.5",

@@ -1,107 +1,105 @@
 const express = require('express');
 const async_hooks = require('async_hooks');
-const { AsyncLocalStorage, AsyncResource } = async_hooks;
-const events = require('events');//Installed npm modules
+const { AsyncLocalStorage } = async_hooks;
+const events = require('events');
 const path = require('path');
-const { EventEmitter } = events;
-const emitter = new EventEmitter();
 const cors = require('cors');
 const os = require('node:os');
-// const ejs = require('ejs');
+const bodyParser = require('body-parser');
+const apis = require('./routes/routes')
 require('dotenv').config();
 
+//Error handling class inherited from the node Error Class
+class ServerError extends Error {
+    constructor(message, cause = null, statusCode = 500) {
+        super(message);
+        this.cause = cause;
+        this.statusCode = statusCode;
+        Error.captureStackTrace(this, this.constructor);
+    }
+}
 
+const emitter = new events.EventEmitter();
 const app = express();
-const PORT = process.env.PORT ?? 5501;//PORT saved in an .env file
-const HOST = process.env.HOST ?? 'localhost';//Resolves to localhost by default;
+const PORT = process.env.PORT ?? 5501;
+const HOST = process.env.HOST ?? 'localhost';
 
-const storage = new AsyncLocalStorage(); //Create a new instance of the AsyncLocalStorage Class
+const storage = new AsyncLocalStorage();
 let idStorage = 0;
 
-// console.log(greeting);
-//The dynamic import starts as a promise and ends at the end of the event-loop
-//when the port connection is made. Note: without the asyn/await,
-//the promise will still run but could miss out
-//unhandled exceptions (errors).
-console.log(import(`./utils/superb.mjs`)); 
+// Set up EJS and static files
+app.set('view engine', "ejs");
+app.set('views', path.join(__dirname, 'views'));
+app.use(express.static(path.resolve(__dirname, 'dist')));
 
-//Event emitter registers the greet event
-emitter.on('greet', () => {
-    console.log("Welcome User")
-})
+//Middleware to parse formdata
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(express.json());
 
-//Allowed domains for cross origin sharing
-var allowedOrigins = ['http://localhost:5501']
-
-//Cors setup for cross-domain requests sharing of resources
+// CORS setup
 const corsOptions = {
-    origin: function(origin, callback){
-        if (allowedOrigins.indexOf(origin) !== -1 || !origin){
-            return callback(null, true)
-        }else{
-            return callback(new Error("Not an allowed domain"), false)
+    origin: (origin, callback) => {
+        const allowedOrigins = [`http://${HOST}:${PORT}`];
+        if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+            return callback(null, true);
+        } else {
+            return callback(new ServerError("Not an allowed domain", null, 403));
         }
     },
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
-    optionsSuccessStatus: 200,
-    methods: ['GET']
-  }
+    methods: ['GET', 'POST']
+};
+app.use(cors(corsOptions));
 
-  //Sets the template engine for server-ui rendering to ejs template tool
-  app.set('view engine', "ejs");
-  app.set('views', path.join(__dirname, 'views'));
-  //Cors middleware
-  app.use(cors(corsOptions));
-
-  
-//Reusable function passed as a callback to get the store state of the 
-//storage object
-function captureID(msg){
-    const id = storage.getStore();
-    console.log(`Message: ${msg}, Captured: ${id}`)
-}
-
-//Middleware that emits the emiiter's greet event 
-//and updates the storage idStorage state for every
-//request
-
+// Middleware for handling storage and events
 app.use((req, res, next) => {
-    const currenttime = new Date();
-    storage.run(idStorage++, () => {
-        emitter.emit('greet');
-        req.time = currenttime;
-        next();
-    })
-    
-})
+    try {
+        const currenttime = new Date();
+        storage.run(idStorage++, () => {
+            emitter.emit('greet');
+            req.time = currenttime;
+            next();
+        });
+    } catch (err) {
+        next(new ServerError("Failed during request processing", err.message));
+    }
+});
 
-//Middleware for express static object
-app.use(express.static(path.resolve(__dirname, 'dist')))
-const dir = path.resolve(__dirname, 'views')
-console.log(dir)
+//Middleware for loading imported route modules
+app.use('/api', apis);
 
-//Resolves all get request to the ejs view template file index.ejs in the 
-//views directory
-app.get('*', (req, res) => {
-    console.log(`The current time is ${req.time}`)
-    captureID("Second")
-    // const buildHtmlFile = path.resolve('./utils/index.html');
-    res.render('index', {
-        content: "Loading..."
-    })
-    // res.sendFile(buildHtmlFile);
-    // res.end(`The current time is ${req.time}`)
-})
+// Catch-all route
+app.get('*', async (req, res, next) => {
+    try {
+        console.log(`The current time is ${req.time}`);
+        res.render('index', {
+            content: `Loading...${new Date()}`
+        });
+    } catch (err) {
+        next(new ServerError("Failed to render index", err.message));
+    }
+});
 
-//Middleware for error handling
-app.use((req, res, next, err) => {
-    console.error(err)
-})
+// Error middleware
+app.use((err, req, res, next) => {
+    if (err instanceof ServerError) {
+        console.error(`ServerError: ${err.message}\nCause: ${err.cause}\nStack: ${err.stack}`);
+        res.status(err.statusCode).json({
+            error: err.message,
+            cause: err.cause,
+            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        });
+    } else {
+        console.error(`Unexpected Error: ${err.message}\nStack: ${err.stack}`);
+        res.status(500).json({
+            error: "An unexpected error occurred.",
+            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        });
+    }
+});
 
-//App/server listens for connection.
 app.listen(PORT, HOST, () => {
-    console.log(`You are now connected to the PORT:${PORT}`, 
-        `Free Memory is ${os.freemem() / 1024 / 1024}`
-    );
-})
+    console.log(`Server running at http://${HOST}:${PORT}`, `\nMemory available is ${os.freemem() / 1024 / 1024}`);
+});

@@ -29,7 +29,7 @@ const ProtectedRoute = () => {
     }
 
     // If not authenticated, redirect to signup
-    return isAuthenticated ? <Outlet /> : <Navigate to="/signup" state={{ from: location }} replace />;
+    return isAuthenticated ? <Outlet /> : <Navigate to="/login" state={{ from: location }} replace />;
 };
 
 export default ProtectedRoute;

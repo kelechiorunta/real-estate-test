@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
 import './Content.css'
 import axios from 'axios';
-import Signup from '../Signup/SignUp'
+import { useNavigate } from 'react-router-dom';
+import LandingPage from '../LandingPage/LandingPage';
 
 export default function Content() {
+    const navigate = useNavigate();
     const [greet, setGreet] = useState("Welcome to my React JSXs");
    
         async function handleGreeting(){
@@ -16,6 +18,7 @@ export default function Content() {
                 // The server responded with a status other than 2xx
                 console.error('Error status:', err.response.status);
                 alert(`Error message: ${err.response.data.error}`, err.response.data.error);
+                navigate('/login');
             } else if (err.request) {
                 // The request was made, but no response was received
                 alert(`No response received: ${err.request}`, err.request);
@@ -27,10 +30,11 @@ export default function Content() {
         }
   return (
     <div className='Content'>
+        <LandingPage/>
         <h1>Good Day</h1>
         <h1>{greet}</h1>
-        <button onClick={handleGreeting}>Show Greeting</button>
-        {/* <Signup/> */}
+        <button className='greeting' onClick={handleGreeting}>Show Greeting</button>
+        
     </div>
   )
 }

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "./Signup.css"; // Import the CSS file
+import "./Login.css"; // Import the CSS file
 
-const Signup = () => {
+const Login = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -33,8 +33,8 @@ const Signup = () => {
       isValid = false;
     }
 
-    if (!formData.password || formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters long.";
+    if (!formData.password) {
+      newErrors.password = "Password cannot be empty.";
       isValid = false;
     }
 
@@ -46,20 +46,19 @@ const Signup = () => {
     e.preventDefault();
     if (validate()) {
       try {
-        const res = await axios.post("/api", formData, { withCredentials: true });
-        console.log(res.data.message);
-        alert("Signup successful!");
+        const res = await axios.post("/api/login", formData, { withCredentials: true });
+        alert("Login successful!");
         navigate("/");
       } catch (err) {
-        console.error(err?.data?.error || err?.message);
-        alert("Could not sign up: " + (err?.response?.data?.error || err?.message));
+        console.error(err?.response?.data?.error || err?.message);
+        alert("Login failed: " + (err?.response?.data?.error || err?.message));
       }
     }
   };
 
   return (
-    <div className="signup-container">
-      <h2>Signup</h2>
+    <div className="login-container">
+      <h2>Login</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="email">Email:</label>
@@ -83,10 +82,10 @@ const Signup = () => {
           />
           {errors.password && <small className="error-message">{errors.password}</small>}
         </div>
-        <button className="submit" type="submit">Sign Up</button>
+        <button className="login" type="submit">Login</button>
       </form>
     </div>
   );
 };
 
-export default Signup;
+export default Login;

@@ -8,8 +8,12 @@ const os = require('node:os');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const apis = require('./backend/routes/routes');
-const { checkToken } = require('./backend/middleware')
+const { checkToken } = require('./backend/middleware');
+const { connectDB } = require('./backend/mongodb');
 require('dotenv').config();
+
+//Connect to the database
+connectDB();
 
 //Error handling class inherited from the node Error Class
 class ServerError extends Error {

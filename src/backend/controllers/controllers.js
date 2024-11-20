@@ -9,7 +9,7 @@ const router = express.Router();
 const emitter = new EventEmitter();
 const userStorage = new AsyncLocalStorage();
 let Users = [
-    { email: "admin", password: "admin" },
+    { email: "admin@example.com", password: "keleman4xst" },
 ];
 
 // Reusable function passed as a callback to log the store state
@@ -95,6 +95,30 @@ function validToken(req, res){
     }
 }
 
+function login(req, res) {
+    const { email, password } = req.body;
+try{
+    if (!email || !password) {
+        return res.status(400).json({error: "Invalid entries"});
+    }
+    const selectedUser = Users.find(user => user.email === email);
+
+    if (selectedUser) {
+        const token = jwt.sign({selectedUser}, process.env.JWT_SECRET, { expiresIn: 60 });
+        res.cookie('kus', token, {maxAge: 60000, httpOnly: true, SameSite: 'None', Secure: true})
+        return res.status(200).json({message: "User successfully logged in!"})
+    }else{
+        return res.status(400).json({message: "No user found"})
+    }
+    
+}
+catch (err) {
+    res.status(500).json({error: "Server Error: " + err.message})
+}
+   
+     
+}
+
 function logout(req, res) {
     
         try{
@@ -117,4 +141,4 @@ function logout(req, res) {
 }
 
 // Export the controllers
-module.exports = { getGreetings, registerUser, validToken, logout};
+module.exports = { getGreetings, registerUser, validToken, logout, login};

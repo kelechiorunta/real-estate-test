@@ -6,7 +6,9 @@ const path = require('path');
 const cors = require('cors');
 const os = require('node:os');
 const bodyParser = require('body-parser');
-const apis = require('./routes/routes')
+const cookieParser = require('cookie-parser');
+const apis = require('./backend/routes/routes');
+const { checkToken } = require('./backend/middleware')
 require('dotenv').config();
 
 //Error handling class inherited from the node Error Class
@@ -30,6 +32,7 @@ let idStorage = 0;
 // Set up EJS and static files
 app.set('view engine', "ejs");
 app.set('views', path.join(__dirname, 'views'));
+app.use(cookieParser())
 app.use(express.static(path.resolve(__dirname, 'dist')));
 
 //Middleware to parse formdata
@@ -60,6 +63,11 @@ app.use((req, res, next) => {
         storage.run(idStorage++, () => {
             emitter.emit('greet');
             req.time = currenttime;
+            if (req.cookies.kus) {
+                console.log("Cookie Kus exists")
+            }else{
+                console.log("Cookie Kus expired")
+            }
             next();
         });
     } catch (err) {

@@ -5,10 +5,15 @@ module.exports = {
     entry: './src/index.jsx', // React entry point
     output: {
         path: path.resolve(__dirname, 'src/dist'), // Place bundled React app in src/dist
-        filename: 'main[contenthash].js',
+        filename: 'main.js',//'main[contenthash].js',
     },
     module: {
         rules: [
+
+            {test: /\.css$/i,
+            use: ["style-loader", "css-loader"]
+            }
+            ,
             {
                 test: /\.jsx?$/,
                 exclude: /node_modules/,

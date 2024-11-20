@@ -1,0 +1,18 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    box-sizing: border-box;
+  }
+  
+  /* Header Styles */
+  .Content {
+    display: flex;
+    flex-direction: column;
+    /* justify-content: space-between; */
+    align-items: center;
+    padding: 15px 20px;
+    gap: 1rem;
+    /* background-color: #007BFF; */
+    /* color: white; */
+  }

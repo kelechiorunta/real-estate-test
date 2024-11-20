@@ -1,7 +1,10 @@
 import axios from "axios";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Signup = () => {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -45,13 +48,17 @@ const Signup = () => {
     if (validate()) {
         try{
             const res = await axios.post('/api', formData, {withCredentials: true});
-            console.log(res.data.message)
+            console.log(res.data.message);
+            
+            console.log("Form Submitted", formData);
+            alert("Signup successful!");
+            navigate('/');
         }
         catch(err){
-            console.error(err?.data?.error || err?.message)
+            console.error(err?.data?.error || err?.message);
+            prompt('Could not sign up?', err?.response?.data?.error || err?.message)
         }
-      console.log("Form Submitted", formData);
-      alert("Signup successful!");
+      
       // You can add logic to send formData to a server
     }
   };
